@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  rag-cli:
+    build: .
+    image: security-rag-assistant:local
+    volumes:
+      - ./data:/app/data
+    command: ["--help"]

@@ -1,0 +1,4 @@
+{"timestamp":"2026-04-24T10:00:00Z","host":"srv-auth-01","event_type":"login","severity":"medium","user":"alice","src_ip":"203.0.113.4","message":"Login failed: invalid password","token":"abc123SECRETtoken"}
+{"timestamp":"2026-04-24T10:05:00Z","host":"srv-auth-01","event_type":"login","severity":"high","user":"alice","src_ip":"203.0.113.4","message":"Multiple failed authentication attempts"}
+{"timestamp":"2026-04-24T11:15:00Z","host":"srv-fin-02","event_type":"process_create","severity":"high","user":"svc-fin","process":"powershell.exe","src_ip":"10.0.0.12","message":"Encoded command execution detected"}
+{"timestamp":"2026-04-24T11:20:00Z","host":"srv-fin-02","event_type":"network_connection","severity":"low","user":"svc-fin","src_ip":"10.0.0.12","dst_ip":"198.51.100.99","message":"Outbound connection established"}
