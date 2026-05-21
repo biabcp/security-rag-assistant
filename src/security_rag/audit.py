@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 
-def write_audit_log(audit_path: Path, query: str, evidence: list[dict], answer: str) -> None:
+def write_audit_log(audit_path: Path, query: str, evidence: list[dict[str, Any]], answer: str) -> None:
     audit_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "timestamp": datetime.now(timezone.utc).isoformat(),

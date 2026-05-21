@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
 from .vector_store import LocalVectorStore
 
@@ -20,8 +21,8 @@ class RAGAssistant:
     def __init__(self, store: LocalVectorStore):
         self.store = store
 
-    def query(self, user_query: str, host: str | None = None, hours: int | None = None, k: int = 5) -> dict:
-        filters = {"host": host}
+    def query(self, user_query: str, host: str | None = None, hours: int | None = None, k: int = 5) -> dict[str, Any]:
+        filters: dict[str, Any] = {"host": host}
         if hours is not None:
             now = datetime.now(timezone.utc)
             filters["time_start"] = (now - timedelta(hours=hours)).isoformat()
@@ -31,7 +32,7 @@ class RAGAssistant:
         answer = self._rule_based_answer(user_query, evidence)
         return {"query": user_query, "evidence": evidence, "answer": answer, "system_prompt": SYSTEM_PROMPT}
 
-    def _rule_based_answer(self, query: str, evidence: list[dict]) -> str:
+    def _rule_based_answer(self, query: str, evidence: list[dict[str, Any]]) -> str:
         if not evidence:
             return "Insufficient evidence."
 
@@ -71,7 +72,7 @@ def build_index_from_normalized(normalized_path: Path, index_path: Path) -> int:
     return n
 
 
-def _event_to_chunk(row: dict) -> str:
+def _event_to_chunk(row: dict[str, Any]) -> str:
     return (
         f"timestamp={row['timestamp']} host={row['host']} event_type={row['event_type']} "
         f"severity={row['severity']} user={row.get('user')} src_ip={row.get('src_ip')} "

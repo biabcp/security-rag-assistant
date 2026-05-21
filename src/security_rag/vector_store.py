@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import faiss
 import numpy as np
@@ -16,9 +16,9 @@ class LocalVectorStore:
         self.dim = dim
         self.vectorizer = HashingVectorizer(n_features=dim, alternate_sign=False, norm="l2")
         self.index = faiss.IndexFlatIP(dim)
-        self.metadata: list[dict] = []
+        self.metadata: list[dict[str, Any]] = []
 
-    def add(self, docs: Iterable[dict]) -> int:
+    def add(self, docs: Iterable[dict[str, Any]]) -> int:
         docs = list(docs)
         texts = [d["chunk_text"] for d in docs]
         vectors = self.vectorizer.transform(texts).toarray().astype(np.float32)
@@ -26,10 +26,10 @@ class LocalVectorStore:
         self.metadata.extend(docs)
         return len(docs)
 
-    def search(self, query: str, k: int = 5, filters: dict | None = None) -> list[dict]:
+    def search(self, query: str, k: int = 5, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         q = self.vectorizer.transform([query]).toarray().astype(np.float32)
         scores, idx = self.index.search(q, min(k * 5, max(len(self.metadata), 1)))
-        out: list[dict] = []
+        out: list[dict[str, Any]] = []
 
         for score, i in zip(scores[0], idx[0], strict=False):
             if i < 0 or i >= len(self.metadata):
@@ -58,7 +58,7 @@ class LocalVectorStore:
         return obj
 
 
-def _passes_filters(row: dict, filters: dict) -> bool:
+def _passes_filters(row: dict[str, Any], filters: dict[str, Any]) -> bool:
     for key, expected in filters.items():
         if expected is None:
             continue

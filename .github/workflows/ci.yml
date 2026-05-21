@@ -22,9 +22,8 @@ jobs:
       - name: Lint
         run: ruff check src/ tests/
 
-      - name: Type check (advisory)
-        run: mypy src/security_rag/ --ignore-missing-imports
-        continue-on-error: true
+      - name: Type check
+        run: mypy --strict src/security_rag/ --ignore-missing-imports
 
       - name: Test
         run: pytest tests/ -v

@@ -16,7 +16,7 @@ SENSITIVE_KEYS = {"password", "token", "secret", "api_key", "authorization", "ss
 
 
 def redact_dict(obj: dict[str, Any]) -> dict[str, Any]:
-    redacted = {}
+    redacted: dict[str, Any] = {}
     for k, v in obj.items():
         if k.lower() in SENSITIVE_KEYS:
             redacted[k] = "[REDACTED]"

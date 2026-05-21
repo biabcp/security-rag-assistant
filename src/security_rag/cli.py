@@ -14,13 +14,13 @@ app = typer.Typer(help="Security RAG Assistant")
 
 
 @app.command()
-def ingest(raw_path: Path, normalized_path: Path = Path("data/processed/normalized.jsonl")):
+def ingest(raw_path: Path, normalized_path: Path = Path("data/processed/normalized.jsonl")) -> None:
     n = ingest_jsonl(raw_path, normalized_path)
     typer.echo(f"Ingested {n} events to {normalized_path}")
 
 
 @app.command()
-def index(normalized_path: Path = Path("data/processed/normalized.jsonl"), index_path: Path = Path("data/index")):
+def index(normalized_path: Path = Path("data/processed/normalized.jsonl"), index_path: Path = Path("data/index")) -> None:
     n = build_index_from_normalized(normalized_path, index_path)
     typer.echo(f"Indexed {n} events into {index_path}")
 
@@ -33,7 +33,7 @@ def ask(
     k: int = 5,
     index_path: Path = Path("data/index"),
     audit_path: Path = Path("data/audit/interactions.jsonl"),
-):
+) -> None:
     store = LocalVectorStore.load(index_path)
     assistant = RAGAssistant(store)
     result = assistant.query(query, host=host, hours=hours, k=k)
