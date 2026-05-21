@@ -21,8 +21,19 @@ class RAGAssistant:
     def __init__(self, store: LocalVectorStore):
         self.store = store
 
-    def query(self, user_query: str, host: str | None = None, hours: int | None = None, k: int = 5) -> dict[str, Any]:
-        filters: dict[str, Any] = {"host": host}
+    def query(
+        self,
+        user_query: str,
+        host: str | None = None,
+        severity: str | None = None,
+        hours: int | None = None,
+        k: int = 5,
+    ) -> dict[str, Any]:
+        filters: dict[str, Any] = {}
+        if host:
+            filters["host"] = host
+        if severity:
+            filters["severity"] = severity
         if hours is not None:
             now = datetime.now(timezone.utc)
             filters["time_start"] = (now - timedelta(hours=hours)).isoformat()

@@ -22,7 +22,7 @@ def test_valid_jsonl_parsing(tmp_path: Path) -> None:
     _write_jsonl(raw, events)
     n = ingest_jsonl(raw, out)
     assert n == 2
-    lines = [json.loads(l) for l in out.read_text().strip().splitlines()]
+    lines = [json.loads(line) for line in out.read_text().strip().splitlines()]
     assert len(lines) == 2
     assert lines[0]["host"] == "h1"
     assert lines[1]["host"] == "h2"
@@ -38,7 +38,7 @@ def test_timestamp_normalization(tmp_path: Path) -> None:
     ]
     _write_jsonl(raw, events)
     ingest_jsonl(raw, out)
-    lines = [json.loads(l) for l in out.read_text().strip().splitlines()]
+    lines = [json.loads(line) for line in out.read_text().strip().splitlines()]
     assert "+00:00" in lines[0]["timestamp"] or "Z" in lines[0]["timestamp"]
     assert "+05:00" in lines[1]["timestamp"] or "05:00" in lines[1]["timestamp"]
 
