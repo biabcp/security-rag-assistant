@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -102,6 +103,31 @@ def watch(
             time.sleep(poll_interval)
     except KeyboardInterrupt:
         typer.echo("\nWatch stopped.")
+
+
+@app.command(name="eval")
+def evaluate(
+    index_path: Path = Path("data/index"),
+    golden_path: Path = Path("eval/golden_queries.jsonl"),
+    format: str = "text",
+) -> None:
+    """Run retrieval evaluation against golden queries."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+    from eval.evaluate import run_evaluation
+
+    results = run_evaluation(index_path, golden_path)
+
+    if format == "json":
+        typer.echo(json.dumps(results, indent=2))
+    else:
+        metrics = results["metrics"]
+        typer.echo("=== Evaluation Results ===")
+        typer.echo(f"Queries evaluated: {results['num_queries']}")
+        typer.echo(f"Mean Precision@3:  {metrics.get('mean_precision@3', 0):.3f}")
+        typer.echo(f"Mean Precision@5:  {metrics.get('mean_precision@5', 0):.3f}")
+        typer.echo(f"Mean Recall@5:     {metrics.get('mean_recall@5', 0):.3f}")
+        typer.echo(f"Mean MRR:          {metrics['mean_mrr']:.3f}")
+        typer.echo(f"Hallucinations:    {metrics['total_hallucinations']}")
 
 
 @app.command()
