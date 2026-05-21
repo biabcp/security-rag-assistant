@@ -31,9 +31,19 @@ def ingest(
 
 
 @app.command()
-def index(normalized_path: Path = Path("data/processed/normalized.jsonl"), index_path: Path = Path("data/index")) -> None:
-    n = build_index_from_normalized(normalized_path, index_path)
-    typer.echo(f"Indexed {n} events into {index_path}")
+def index(
+    normalized_path: Path = Path("data/processed/normalized.jsonl"),
+    index_path: Path = Path("data/index"),
+    backend: str = "hashing",
+    strategy: str = "event",
+    window_minutes: int = 5,
+) -> None:
+    """Build vector index from normalized events."""
+    n = build_index_from_normalized(
+        normalized_path, index_path,
+        backend_name=backend, strategy=strategy, window_minutes=window_minutes,
+    )
+    typer.echo(f"Indexed {n} chunks into {index_path} (backend={backend}, strategy={strategy})")
 
 
 @app.command()
@@ -44,12 +54,14 @@ def ask(
     hours: int | None = None,
     k: int = 5,
     format: str = "text",
+    hybrid_alpha: float = 1.0,
     index_path: Path = Path("data/index"),
     audit_path: Path = Path("data/audit/interactions.jsonl"),
 ) -> None:
+    """Ask a security question against the indexed events."""
     store = LocalVectorStore.load(index_path)
     assistant = RAGAssistant(store)
-    result = assistant.query(query, host=host, severity=severity, hours=hours, k=k)
+    result = assistant.query(query, host=host, severity=severity, hours=hours, k=k, hybrid_alpha=hybrid_alpha)
 
     write_audit_log(audit_path, query=result["query"], evidence=result["evidence"], answer=result["answer"])
 
