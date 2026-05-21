@@ -167,5 +167,20 @@ def status(
     typer.echo(f"Audit log entries: {n_audit}")
 
 
+
+
+@app.command()
+def serve(
+    host: str = "0.0.0.0",
+    port: int = 8000,
+) -> None:
+    """Start the REST API server."""
+    try:
+        import uvicorn
+    except ImportError:
+        typer.echo("Install API dependencies: pip install -e '.[api]'")
+        raise typer.Exit(1)
+    uvicorn.run("security_rag.api:app", host=host, port=port, reload=True)
+
 if __name__ == "__main__":
     app()
