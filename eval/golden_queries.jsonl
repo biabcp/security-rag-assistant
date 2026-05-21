@@ -1,0 +1,5 @@
+{"query": "Show suspicious login activity", "relevant_event_ids": ["f5fc47b8f2d0ad07", "c91f0eef1c65c951"]}
+{"query": "List high-severity PowerShell events", "relevant_event_ids": ["f9174f3c000d8bb9"]}
+{"query": "Show authentication failures", "relevant_event_ids": ["f5fc47b8f2d0ad07", "c91f0eef1c65c951"]}
+{"query": "Outbound network connections from srv-fin-02", "relevant_event_ids": ["6dc7c9ccd3b83547"]}
+{"query": "Events from srv-auth-01", "relevant_event_ids": ["f5fc47b8f2d0ad07", "c91f0eef1c65c951"]}
