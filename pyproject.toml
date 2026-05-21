@@ -16,6 +16,11 @@ dependencies = [
 llm = [
   "openai>=1.47"
 ]
+dev = [
+  "pytest",
+  "ruff",
+  "mypy",
+]
 
 [project.scripts]
 security-rag = "security_rag.cli:app"

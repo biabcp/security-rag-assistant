@@ -228,8 +228,10 @@ Always cite event_id values used as evidence.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -e '.[dev]'
 security-rag --help
+pytest tests/ -v
+ruff check src/ tests/
 ```
 
 ---
