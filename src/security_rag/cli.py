@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import typer
 
 from .audit import write_audit_log
-from .ingest import ingest_jsonl
+from .ingest import ingest_csv, ingest_directory, ingest_jsonl
 from .rag import RAGAssistant, build_index_from_normalized
 from .vector_store import LocalVectorStore
 
@@ -14,8 +15,18 @@ app = typer.Typer(help="Security RAG Assistant")
 
 
 @app.command()
-def ingest(raw_path: Path, normalized_path: Path = Path("data/processed/normalized.jsonl")) -> None:
-    n = ingest_jsonl(raw_path, normalized_path)
+def ingest(
+    raw_path: Path,
+    normalized_path: Path = Path("data/processed/normalized.jsonl"),
+    append: bool = False,
+) -> None:
+    """Ingest log files (JSONL, CSV, or a directory of them)."""
+    if raw_path.is_dir():
+        n = ingest_directory(raw_path, normalized_path, append=append)
+    elif raw_path.suffix == ".csv":
+        n = ingest_csv(raw_path, normalized_path, append=append)
+    else:
+        n = ingest_jsonl(raw_path, normalized_path, append=append)
     typer.echo(f"Ingested {n} events to {normalized_path}")
 
 
@@ -49,6 +60,36 @@ def ask(
         typer.echo(json.dumps(result["evidence"], indent=2))
         typer.echo("\n=== Generated Answer ===")
         typer.echo(result["answer"])
+
+
+@app.command()
+def watch(
+    directory: Path,
+    normalized_path: Path = Path("data/processed/normalized.jsonl"),
+    poll_interval: int = 5,
+) -> None:
+    """Watch a directory for new .jsonl/.csv files and auto-ingest them."""
+    seen: set[str] = set()
+    if directory.exists():
+        for f in directory.iterdir():
+            if f.suffix in {".jsonl", ".csv"}:
+                seen.add(str(f))
+
+    typer.echo(f"Watching {directory} for new log files (poll every {poll_interval}s)...")
+    try:
+        while True:
+            if directory.exists():
+                for f in sorted(directory.iterdir()):
+                    if f.suffix in {".jsonl", ".csv"} and str(f) not in seen:
+                        seen.add(str(f))
+                        if f.suffix == ".jsonl":
+                            n = ingest_jsonl(f, normalized_path, append=True)
+                        else:
+                            n = ingest_csv(f, normalized_path, append=True)
+                        typer.echo(f"Auto-ingested {n} events from {f.name}")
+            time.sleep(poll_interval)
+    except KeyboardInterrupt:
+        typer.echo("\nWatch stopped.")
 
 
 @app.command()
