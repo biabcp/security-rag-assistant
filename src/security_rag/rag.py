@@ -7,6 +7,7 @@ from typing import Any
 
 from .chunking import event_chunks, session_chunks
 from .embeddings import get_backend
+from .llm import LLMProvider, RuleBasedProvider, detect_prompt_injection
 from .vector_store import LocalVectorStore
 
 SYSTEM_PROMPT = """You are a senior SOC analyst assistant.
@@ -20,8 +21,9 @@ Rules:
 
 
 class RAGAssistant:
-    def __init__(self, store: LocalVectorStore):
+    def __init__(self, store: LocalVectorStore, llm: LLMProvider | None = None):
         self.store = store
+        self.llm = llm or RuleBasedProvider()
 
     def query(
         self,
@@ -32,6 +34,14 @@ class RAGAssistant:
         k: int = 5,
         hybrid_alpha: float = 1.0,
     ) -> dict[str, Any]:
+        if detect_prompt_injection(user_query):
+            return {
+                "query": user_query,
+                "evidence": [],
+                "answer": "Query rejected: potential prompt injection detected.",
+                "system_prompt": SYSTEM_PROMPT,
+            }
+
         filters: dict[str, Any] = {}
         if host:
             filters["host"] = host
@@ -43,8 +53,24 @@ class RAGAssistant:
             filters["time_end"] = now.isoformat()
 
         evidence = self.store.search(user_query, k=k, filters=filters, hybrid_alpha=hybrid_alpha)
-        answer = self._rule_based_answer(user_query, evidence)
+        answer = self._generate_answer(user_query, evidence)
         return {"query": user_query, "evidence": evidence, "answer": answer, "system_prompt": SYSTEM_PROMPT}
+
+    def _generate_answer(self, query: str, evidence: list[dict[str, Any]]) -> str:
+        """Try LLM generation, fall back to rule-based."""
+        if evidence:
+            evidence_text = "\n".join(
+                f"[{e['event_id']}] {e['timestamp']} {e['host']} {e['event_type']} "
+                f"severity={e['severity']} message={e['message']}"
+                for e in evidence
+            )
+            user_message = f"Query: {query}\n\nRetrieved Evidence:\n{evidence_text}"
+
+            llm_answer = self.llm.generate(SYSTEM_PROMPT, user_message)
+            if llm_answer:
+                return llm_answer
+
+        return self._rule_based_answer(query, evidence)
 
     def _rule_based_answer(self, query: str, evidence: list[dict[str, Any]]) -> str:
         if not evidence:

@@ -9,6 +9,7 @@ import typer
 
 from .audit import write_audit_log
 from .ingest import ingest_csv, ingest_directory, ingest_jsonl
+from .llm import get_llm_provider
 from .rag import RAGAssistant, build_index_from_normalized
 from .vector_store import LocalVectorStore
 
@@ -56,12 +57,14 @@ def ask(
     k: int = 5,
     format: str = "text",
     hybrid_alpha: float = 1.0,
+    llm_provider: str = "rule",
     index_path: Path = Path("data/index"),
     audit_path: Path = Path("data/audit/interactions.jsonl"),
 ) -> None:
     """Ask a security question against the indexed events."""
     store = LocalVectorStore.load(index_path)
-    assistant = RAGAssistant(store)
+    llm = get_llm_provider(llm_provider)
+    assistant = RAGAssistant(store, llm=llm)
     result = assistant.query(query, host=host, severity=severity, hours=hours, k=k, hybrid_alpha=hybrid_alpha)
 
     write_audit_log(audit_path, query=result["query"], evidence=result["evidence"], answer=result["answer"])
